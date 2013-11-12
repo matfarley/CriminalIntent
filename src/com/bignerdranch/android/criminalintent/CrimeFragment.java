@@ -6,6 +6,7 @@ import java.util.UUID;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,6 +14,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,16 +24,20 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 public class CrimeFragment extends Fragment {
+	private static final String TAG = "CrimeFragment";
 	public static final String EXTRA_CRIME_ID = 
 			"com.bignerdranch.android.criminalintent.crime_id";
 	private static final String DIALOG_DATE = "date";
 	private static final int REQUEST_DATE = 0;
+	private static final int REQUEST_PHOTO = 1;
 	private Crime mCrime;
 	private EditText mTitleField;
 	private Button mDateButton;
 	private CheckBox mSolvedCheckBox;
+	private ImageButton mPhotoButton;
 	
 	//Method is used to get the timing right for adding args to a fragment
 	//Used externally in lieu of the constructor.
@@ -69,6 +75,12 @@ public class CrimeFragment extends Fragment {
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+	
+	@Override
+	public void onPause(){
+		super.onPause();
+		CrimeLab.get(getActivity()).saveCrimes();
 	}
 	
 	@TargetApi(11)
@@ -123,6 +135,24 @@ public class CrimeFragment extends Fragment {
 			}
 		});
 		
+		
+		mPhotoButton = (ImageButton)v.findViewById(R.id.crime_imageButton);
+		mPhotoButton.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent i = new Intent(getActivity(), CrimeCameraActivity.class);
+				startActivityForResult(i, REQUEST_PHOTO);	
+			}
+		});
+		
+		//If camera is not available, disable camera functionality
+		PackageManager pm = getActivity().getPackageManager();
+		if(!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT) &&
+				!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT)){
+			mPhotoButton.setEnabled(false);
+		}
+		
 		return v;
 	}
 	
@@ -134,6 +164,12 @@ public class CrimeFragment extends Fragment {
 					.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
 			mCrime.setDate(date);
 			updateDate();
+		}else if(requestCode == REQUEST_PHOTO){
+			//Create a new photo object and attach it to the crime
+			String filename = data.getStringExtra(CrimeCameraFragment.EXTRA_PHOTO_FILENAME);
+			if(filename != null){
+				Log.i(TAG, "filename: " + filename);
+			}
 		}
 	}
 
