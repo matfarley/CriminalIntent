@@ -10,9 +10,14 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 
-public class CrimePagerActivity extends FragmentActivity {
+public class CrimePagerActivity extends FragmentActivity
+    implements CrimeFragment.Callbacks{
 	private ViewPager mViewPager;
 	private ArrayList<Crime> mCrimes;
+	
+	public void onCrimeUpdated(Crime crime){
+		
+	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState){
@@ -24,6 +29,7 @@ public class CrimePagerActivity extends FragmentActivity {
 		mCrimes = CrimeLab.get(this).getCrimes();
 		
 		FragmentManager fm = getSupportFragmentManager();
+
 		mViewPager.setAdapter(new FragmentStatePagerAdapter(fm){
 			@Override
 			public int getCount(){

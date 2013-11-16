@@ -31,6 +31,8 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
+import com.bignerdranch.android.criminalintent.CrimeListFragment.Callbacks;
+
 public class CrimeFragment extends Fragment {
 	private static final String TAG = "CrimeFragment";
 	public static final String EXTRA_CRIME_ID = 
@@ -47,6 +49,26 @@ public class CrimeFragment extends Fragment {
 	private ImageButton mPhotoButton;
 	private ImageView mPhotoView;
 	private Button mSuspectButton;
+	private Callbacks mCallbacks;
+	
+	/**
+	 * Required interface for hosting activities
+	 */
+	public interface Callbacks {
+		void onCrimeUpdated(Crime crime);
+	}
+	
+	@Override
+	public void onAttach(Activity activity){
+		super.onAttach(activity);
+		mCallbacks = (Callbacks)activity;	
+	}
+	
+	@Override
+	public void onDetach(){
+		super.onDetach();
+		mCallbacks = null;
+	}
 	
 	//Method is used to get the timing right for adding args to a fragment
 	//Used externally in lieu of the constructor.
@@ -108,6 +130,8 @@ public class CrimeFragment extends Fragment {
 		mTitleField.addTextChangedListener(new TextWatcher(){
 			public void onTextChanged(CharSequence c, int start, int before, int count){
 				mCrime.setTitle(c.toString());
+				mCallbacks.onCrimeUpdated(mCrime);
+				getActivity().setTitle(mCrime.getTitle());
 			}
 			
 			public void beforeTextChanged(CharSequence c, int start, int count, int after){
@@ -141,6 +165,7 @@ public class CrimeFragment extends Fragment {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
 				//Set crime's solved property
 				mCrime.setSolved(isChecked);
+				mCallbacks.onCrimeUpdated(mCrime);
 			}
 		});
 		
@@ -244,6 +269,7 @@ public class CrimeFragment extends Fragment {
 			Date date = (Date)data
 					.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
 			mCrime.setDate(date);
+			mCallbacks.onCrimeUpdated(mCrime);
 			updateDate();
 		}else if(requestCode == REQUEST_PHOTO){
 			//Create a new photo object and attach it to the crime
@@ -251,6 +277,7 @@ public class CrimeFragment extends Fragment {
 			if(filename != null){
 				Photo p = new Photo(filename);
 				mCrime.setPhoto(p);
+				mCallbacks.onCrimeUpdated(mCrime);
 				showPhoto();
 			}
 		}else if(requestCode == REQUEST_CONTACT){
@@ -273,6 +300,7 @@ public class CrimeFragment extends Fragment {
 			c.moveToFirst();
 			String suspect = c.getString(0);
 			mCrime.setSuspect(suspect);
+			mCallbacks.onCrimeUpdated(mCrime);
 			mSuspectButton.setText(suspect);
 			c.close();
 		}
